@@ -7,6 +7,9 @@ var ballSpeedY = 4;
 
 var player1Score = 0;
 var player2Score = 0;
+const WINNING_SCORE = 5;
+
+var showingWinScreen = false;
 
 var paddle1Y = 250;
 var paddle2Y = 250;
@@ -26,6 +29,14 @@ function calculateMousePos(evt) {
   };
 }
 
+function handleMouseClick(evt){
+  if(showingWinScreen){
+    player1Score = 0;
+    player2Score = 0;
+    showingWinScreen = false;
+  }
+}
+
 window.onload = function(){
   canvas = document.getElementById('gameCanvas');
   canvasContext = canvas.getContext('2d');
@@ -37,6 +48,8 @@ window.onload = function(){
     drawEverything();
   }, 1000 / fps);
 
+  canvas.addEventListener('mousedown', handleMouseClick);
+
   canvas.addEventListener('mousemove', function(evt) {
     var mousePos = calculateMousePos(evt);
 
@@ -44,28 +57,37 @@ window.onload = function(){
   })
 
   function ballReset() {
+
+    if(player1Score >= WINNING_SCORE || player2Score >= WINNING_SCORE) {
+
+      showingWinScreen = true;
+    }
+
     ballSpeedX = -ballSpeedX;
 
     ballX = canvas.width / 2;
     ballY = canvas.height / 2;
   } 
 
-function computerMovement() {
-  var paddle2YCentre = paddle2Y + (PADDLE_HEIGHT / 2);
-  
-  if(paddle2YCentre < (ballY - 35) ) {
-    paddle2Y += 6;
-  } else if(paddle2YCentre > (ballY + 35) ) {
-    paddle2Y -= 6;
+  function computerMovement() {
+    var paddle2YCentre = paddle2Y + (PADDLE_HEIGHT / 2);
+
+    if(paddle2YCentre < (ballY - 35) ) {
+      paddle2Y += 6;
+    } else if(paddle2YCentre > (ballY + 35) ) {
+      paddle2Y -= 6;
+    }
   }
-}
 
-function moveEverything() {
-  console.log(ballX);
-  computerMovement();
+  function moveEverything() {
+    if(showingWinScreen) {
+      return;
+    }
 
-  ballX += ballSpeedX;
-  ballY += ballSpeedY;
+    computerMovement();
+
+    ballX += ballSpeedX;
+    ballY += ballSpeedY;
 
   //code for if ball passes left edge/paddle 1
   if(ballX < 0) {
@@ -74,11 +96,12 @@ function moveEverything() {
       ballSpeedX = -ballSpeedX;
 
       //set speed depending on angle paddle is hit
-      var deltaY = ballY - (paddle1Y + PADDLE_HEIGHT /2);
-        ballSpeedY = deltaY * 0.35;
+      var deltaY = ballY - (paddle1Y + PADDLE_HEIGHT / 2);
+
+      ballSpeedY = deltaY * 0.35;
     } else {
+      player2Score++; //must be BEFORE ballReset()
       ballReset();
-      player2Score++;
     }
   }
   //code for if ball passes right edge/paddle 2
@@ -87,36 +110,58 @@ function moveEverything() {
       ballY < (paddle2Y + PADDLE_HEIGHT) ) {
       ballSpeedX = -ballSpeedX;
 
-      var deltaY = ballY - (paddle2Y + PADDLE_HEIGHT /2);
-        ballSpeedY = deltaY * 0.35;
-    } else {
-      ballReset();
-      player1Score++;
-    }
+    var deltaY = ballY - (paddle2Y + PADDLE_HEIGHT /2);
+    ballSpeedY = deltaY * 0.35;
+  } else {
+    player1Score++;
+    ballReset();
+  }
 
-  }
-  if(ballY < 0) {
-    ballSpeedY = -ballSpeedY;
-  }
-  if(ballY > canvas.height) {
-    ballSpeedY = -ballSpeedY;
+}
+if(ballY < 0) {
+  ballSpeedY = -ballSpeedY;
+}
+if(ballY > canvas.height) {
+  ballSpeedY = -ballSpeedY;
+}
+}
+function drawNet(){
+  for(var i = 0; i < canvas.height; i+=40){
+    colorRect((canvas.width / 2) - 1, i, 2, 20, 'white');
   }
 }
 
 function drawEverything() {
-  //draw canvas
+
+  //draw canvas background
   colorRect(0, 0, canvas.width, canvas.height, 'black');
 
-  //draw left paddle
+  if(showingWinScreen) {
+    canvasContext.fillStyle = 'white';
+
+    if(player1Score >= WINNING_SCORE) {
+      canvasContext.fillText("Good job, player you won!",350, 200);
+
+    }else if(player2Score >= WINNING_SCORE) {
+      canvasContext.fillText("Computer is the dude!",350, 200);
+    }
+
+    canvasContext.fillText("Click to continue",350, 500);
+
+    return;
+  }
+  drawNet()
+
+  //draw left player paddle
   colorRect(0, paddle1Y, PADDLE_THICKNESS, PADDLE_HEIGHT, 'white');
 
-  //draw right paddle
+  //draw right computer paddle
   colorRect(canvas.width - PADDLE_THICKNESS, paddle2Y, PADDLE_THICKNESS, PADDLE_HEIGHT, 'white');
 
   //draw ball
   colorCircle(ballX, ballY, 10, 'red'); 
 
-  canvasContext.font = "40px";
+  canvasContext.font="40px";
   canvasContext.fillText(player1Score, 100, 100);
   canvasContext.fillText(player2Score, canvas.width - 100, 100);
 }
