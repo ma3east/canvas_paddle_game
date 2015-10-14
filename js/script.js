@@ -61,6 +61,7 @@ function computerMovement() {
 }
 
 function moveEverything() {
+  console.log(ballX);
   computerMovement();
 
   ballX += ballSpeedX;
@@ -71,6 +72,10 @@ function moveEverything() {
     if(ballY > paddle1Y && 
       ballY < (paddle1Y + PADDLE_HEIGHT) ) {
       ballSpeedX = -ballSpeedX;
+
+      //set speed depending on angle paddle is hit
+      var deltaY = ballY - (paddle1Y + PADDLE_HEIGHT /2);
+        ballSpeedY = deltaY * 0.35;
     } else {
       ballReset();
       player2Score++;
@@ -81,11 +86,14 @@ function moveEverything() {
     if(ballY > paddle2Y && 
       ballY < (paddle2Y + PADDLE_HEIGHT) ) {
       ballSpeedX = -ballSpeedX;
+
+      var deltaY = ballY - (paddle2Y + PADDLE_HEIGHT /2);
+        ballSpeedY = deltaY * 0.35;
     } else {
       ballReset();
       player1Score++;
     }
-    ballSpeedX = -ballSpeedX;
+
   }
   if(ballY < 0) {
     ballSpeedY = -ballSpeedY;
